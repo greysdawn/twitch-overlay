@@ -17,16 +17,64 @@ module.exports = {
 		DELETE_SUBSCRIPTION: (id) => `/eventsub/subscriptions?id=${id}`,
 		GET_BADGES: () => `chat/badges/global`
 	},
-	EMOJIS: `https://static-cdn.jtvnw.net/emoticons/v2/:id/default/light/2.0`,
-	IMAGES: {
-		FOLLOW: 'follow.png',
-		HOST: 'host.png',
-		RAID: 'raid.png',
-		SUB: 'sub.png',
-		SUB_GIFT: 'sub_gift.png',
-		RESUB: 'resub.png',
-		CHEER: 'cheer.png',
-		GOAL_PROGRESS: 'goal_progress.png',
-		GOAL_END: 'goal_end.png',
-	}
+	SUBS: [
+		{
+			type: 'channel.follow',
+			version: 2,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID,
+				moderator_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.raid',
+			version: 1,
+			condition: {
+				to_broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.subscribe',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.subscription.gift',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.subscription.message',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.cheer',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.goal.progress',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		},
+		{
+			type: 'channel.goal.end',
+			version: 1,
+			condition: {
+				broadcaster_user_id: process.env.USER_ID
+			}
+		}
+	],
+	EMOTES: `https://static-cdn.jtvnw.net/emoticons/v2/:id/default/light/2.0`
 }

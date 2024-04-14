@@ -2,25 +2,392 @@
 <head>
 	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
 
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300&display=swap');
+		:root {
+			--bg-color: 20, 20, 20;
+			--opacity: 1;
+		}
+
+		body {
+		  font-family: 'Readex Pro', sans-serif;
+		  color: white;
+		  font-size: 26px;
+		  overflow: hidden;
+		}
+
+		#wrapper {
+		  position: absolute;
+		  z-index: 1;
+		  left: calc(100vw - 500px);
+		  top: 30px;
+		  width: 500px;
+		  height: 100px;
+		  text-align: left;
+		  overflow: hidden;
+		}
+
+		#alert-box {
+		  background-color: rgba(var(--bg-color), var(--opacity));
+		  position: relative;
+		  left: 100%;
+		  border-bottom-left-radius: 10px;
+		  border-top-left-radius: 10px;
+		  margin: auto;
+		  height: 100px;
+		  display: grid;
+		  grid-template-areas: "avatar text";
+		  grid-template-columns: .25fr 1fr;
+		  grid-template-rows: 1fr;
+		  justify-content: center;
+		  align-content: center;
+		  align-items: center;
+		}
+
+		#icon {
+		  width: 80px;
+		  height: auto;
+		  grid-area: avatar;
+		  margin: auto;
+		  position: relative;
+		  animation: icon-bounce .5s infinite;
+		}
+
+		#text {
+		  grid-area: text;
+		}
+
+		.animated-letter {
+		  animation-name: text-bounce;
+		  animation-duration: .5s;
+		  animation-iteration-count: infinite;
+		  display: inline-block;
+		  animation-fill-mode: both;
+		  color: #aa55aa;
+		  position: relative;
+		}
+
+		.animated-letter:nth-child(1n) {
+		  animation-delay: 0s;
+		}
+
+		.animated-letter:nth-child(2n) {
+		  animation-delay: 0.1s;
+		}
+
+		.animated-letter:nth-child(3n) {
+		  animation-delay: 0.2s;
+		}
+
+		.animated-letter:nth-child(4n) {
+		  animation-delay: 0.3s;
+		}
+
+		.animated-letter:nth-child(5n) {
+		  animation-delay: 0.4s;
+		}
+
+		#chat-box {
+			position: absolute;
+			height: calc(100vh - 150px);
+			width: 300px;
+			left: calc(100vw - 300px);
+			top: 150px;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			align-items: flex-start;
+			overflow: hidden;
+		}
+
+		.message {
+			background-color: rgba(var(--bg-color), var(--opacity));
+			border-radius: 5px;
+			box-sizing: border-box;
+			margin: 0 2px 5px 2px;
+			position: relative;
+			padding: 10px;
+			font-size: 16px;
+		}
+
+		.message .badge {
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+
+		.message .emoji {
+			vertical-align: middle;
+		}
+
+		.emote {
+		  position: absolute;
+		  z-index: 0;
+		}
+
+		@keyframes hide {
+			0% {
+				left: 0;
+			}
+
+			100% {
+				left: 100%;
+			}
+		}
+
+		@keyframes show {
+			0% {
+				left: 100%;
+			}
+
+			100% {
+				left: 0;
+			}
+		}
+
+		@keyframes icon-bounce {
+		  0% {
+		    top: -5px;
+		  }
+		  50% {
+		    top: 5px;
+		  }
+		  100% {
+		    top: -5px;
+		  }
+		}
+
+		@keyframes text-bounce {
+		  0% {
+		    top: 0;
+		  }
+		  50% {
+		    top: 5px;
+		  }
+		  100% {
+		    top: 0;
+		  }
+		}
+	</style>
+
 	<script>
+		const wHeight = window.innerHeight;
+		const wWidth = window.innerWidth;
+
+		var e_event;
+		var e_img;
+		var e_alertbox;
+		var e_chatbox;
+
+		const SOUNDS = {
+			FOLLOW: new Audio('follow.wav'),
+			HOST: new Audio('host.wav'),
+			RAID: new Audio('raid.wav'),
+			SUB: new Audio('sub.wav'),
+			SUB_GIFT: new Audio('sub_gift.wav'),
+			RESUB: new Audio('resub.wav'),
+			CHEER: new Audio('cheer.wav'),
+			GOAL_PROGRESS: new Audio('goal_progress.wav'),
+			GOAL_END: new Audio('goal_end.wav'),
+		}
+
+		const IMAGES = {
+			FOLLOW: 'follow.png',
+			HOST: 'host.png',
+			RAID: 'raid.png',
+			SUB: 'sub.png',
+			SUB_GIFT: 'sub_gift.png',
+			RESUB: 'resub.png',
+			CHEER: 'cheer.png',
+			GOAL_PROGRESS: 'goal_progress.png',
+			GOAL_END: 'goal_end.png',
+		}
+		
 		$(document).ready(function() {
 			const client_id = window.crypto.randomUUID();
 			const listEl = document.querySelector('#list');
+
+			e_event 		= document.querySelector('#event-text')
+			e_img 			= document.querySelector('#icon');
+			e_alertbox 		= document.querySelector('#alert-box');
+			e_chatbox 		= document.querySelector('#chat-box');
 
 			const ES = new EventSource(`http://localhost:8080/events?client_id=${client_id}`);
 
 			ES.addEventListener('message', function(evt) {
 				console.log(evt);
-				const { message } = JSON.parse(evt.data);
-				const li = document.createElement("li");
-				li.textContent = message;
-				listEl.appendChild(li);
+				var data = JSON.parse(evt.data);
+				handleChat(data);
+			})
+
+			ES.addEventListener('emote', function(evt) {
+				console.log(evt);
+				var data = JSON.parse(evt.data);
+				handleEmote(data);
+			})
+
+			ES.addEventListener('special', function(evt) {
+				console.log(evt);
+				var data = JSON.parse(evt.data);
+				handleSpecial(data);
 			})
 		})
+
+		function handleChat(event) {
+			var { id, badgeML, textML, userML } = event;
+
+			var msg = document.createElement('div');
+			msg.id = `msg-${id}`;
+			msg.classList.add('message');
+			msg.innerHTML = (
+				`<span>${badgeML}</span>` +
+				userML +
+				`: <span>${textML}</span>`
+			);
+			msg.style.top = '100%';
+			e_chatbox.appendChild(msg);
+
+			$(`#msg-${id}`).animate({top: 0}, 250, function() {
+				setTimeout(() => {
+					$(`#msg-${id}`).animate({opacity: 0}, 500, function() {
+						msg.remove()
+					})
+				}, 4500)
+			})
+		}
+
+		function handleEmoji(event) {
+			var { src, id } = event;
+			var start = {
+				left: rand(0, wWidth),
+				top: rand(0, wHeight)
+			}
+
+			var end = {
+				left: rand(0, wWidth),
+				top: rand(0, wHeight),
+				opacity: 0
+			}
+
+			var em = document.createElement('img');
+			em.src = src;
+			em.id = `emote-${id}`;
+			em.classList.add('emote');
+			em.style.left = start.left;
+			em.style.top = start.top;
+			document.body.appendChild(em);
+
+			$(`#emote-${id}`).animate(end, 1000, function() {
+				em.remove();
+			})
+		}
+
+		function handleSpecial(event) {
+			var { type, data } = event;
+
+			switch(type) {
+				case 'channel.follow':
+					e_event.innerHTML = `${animateText(data.user_name)} followed!`;
+					e_img.src = IMAGES.FOLLOW;
+					SOUNDS.FOLLOW.play();
+					break;
+				case 'channel.raid':
+					e_event.innerHTML = 
+						animateText(data.from_broadcaster_user_name) +
+						' raided with<br><strong>' +
+						animateText(data.viewers.toString()) +
+						"</strong> viewers!";
+					e_img.src = IMAGES.RAID;
+					SOUNDS.RAID.play();
+					break;
+				case 'host':
+					e_event.innerHTML = 
+						animateText(data.username) +
+						' hosted with<br><strong>' +
+						animateText(data.viewers.toString()) +
+						"</strong> viewers!";
+					e_img.src = IMAGES.HOST;
+					SOUNDS.HOST.play();
+					break;
+				case 'channel.subscribe':
+					e_event.innerHTML = 
+						animateText(data.user_name) +
+						' subbed at <br>tier <strong>' +
+						animateText((data.tier / 1000).toString()) +
+						"</strong>!";
+					e_img.src = IMAGES.SUB;
+					SOUNDS.SUB.play();
+					break;
+				case 'channel.subscription.gift':
+					e_event.innerHTML = 
+						animateText(data.user_name || "Anonymous") +
+						' gifted<br><strong>' +
+						animateText(data.total.toString()) +
+						"</strong> subs!";
+					e_img.src = IMAGES.SUB_GIFT;
+					SOUNDS.SUB_GIFT.play();
+					break;
+				case 'channel.subscription.message':
+					e_event.innerHTML = 
+						animateText(data.user_name) +
+						' resubbed for<br><strong>' +
+						animateText(data.duration_months.toString()) +
+						"</strong> months!";
+					e_img.src = IMAGES.RESUB;
+					SOUNDS.RESUB.play();
+					break;
+				case 'channel.cheer':
+					e_event.innerHTML = 
+						animateText(data.user_name || "Anonymous") +
+						' cheered for<br><strong>' +
+						animateText(data.bits.toString()) +
+						"</strong> bits!";
+					e_img.src = IMAGES.CHEER;
+					SOUNDS.CHEER.play();
+					break;
+				case 'channel.goal.progress':
+					e_event.innerHTML = 
+						animateText(data.type) +
+						' goal progress!<br><strong>' +
+						animateText(data.current_amount.toString()) +
+						`</strong> out of ` +
+						`<strong>${data.target_amount.toString()}!</strong>`;
+					e_img.src = IMAGES.GOAL_PROGRESS;
+					SOUNDS.GOAL_PROGRESS.play();
+					break;
+				case 'channel.goal.end':
+					if(!data.is_achieved) return;
+					e_event.innerHTML = `${animateText(type)} goal <strong>completed!</strong>`; 
+					e_img.src = IMAGES.GOAL_END;
+					SOUNDS.GOAL_END.play();
+					break;
+			}
+			
+			e_alertbox.style.animation = 'show .5s forwards';
+			setTimeout(() => {
+				e_alertbox.style.animation = 'hide .5s forwards';
+			}, 4500)
+		}
+
+		function animateText(s) {
+		    let arr = s.split('');
+		    arr = arr.map((l) => {
+		        return `<span class="animated-letter">${l}</span>`
+		    });
+		    return `<strong>${arr.join('')}</strong>`;
+		}
+
+		function rand(min, max) { return Math.floor(Math.random() * (max - min) + min); }
 	</script>
 </head>
 
 <body>
-	<ul id="list">
-	</ul>
+	<div id="chat-box"></div>
+	<div id="wrapper">
+		<div id="alert-box">
+			<img id="icon" src=''>
+			<div id="text">
+				<span id="event-text"></span>
+			</div>
+		</div>
+	</div>
 </body>

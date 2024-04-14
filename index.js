@@ -1,25 +1,9 @@
 const express = require('express');
-const tmi = require('tmi.js');
 const fs = require('fs');
-
-const client = new tmi.Client({
-	channels: [ 'greysdawn' ]
-})
-
-client.connect();
-
-client.on('message', (channel, tags, message, self) => {
-	console.log(message, self)
-	if(self) return;
-
-	for(var c of Object.values(evtClients)) {
-		c.write(`event: message\n`);
-		c.write(`data: ${JSON.stringify({ message })}\n\n`);
-	}
-})
 
 const app = express();
 app.use(express.json());
+app.use(express.static(__dirname + '/assets'));
 
 const index = fs.readFileSync('./index.html');
 app.get("/", async (req, res) => {
@@ -46,11 +30,12 @@ async function setup() {
 	var files = await fs.readdirSync('./handlers');
 	for(var f of files) {
 		var handler = require(f);
-		if(f.setup) await f.setup(app);
+		if(f.setup) await f.setup(app, evtClients);
 	}
 }
 
 setup();
+
 const PORT = process.env.PORT ?? 8080;
 app.listen(PORT)
 console.log(`App listening on port ${PORT}`);
