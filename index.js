@@ -8,9 +8,19 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname + "/assets"));
 
-const index = fs.readFileSync("./index.html");
+const index = fs.readFileSync("./pages/index.html");
 app.get("/", async (req, res) => {
 	return res.status(200).send(index.toString("utf-8"));
+});
+
+const chat = fs.readFileSync("./pages/chat-only.html");
+app.get("/chat-only", async (req, res) => {
+	return res.status(200).send(chat.toString("utf-8"));
+});
+
+const alerts = fs.readFileSync("./pages/alerts-only.html");
+app.get("/alerts-only", async (req, res) => {
+	return res.status(200).send(alerts.toString("utf-8"));
 });
 
 const evtClients = {};

@@ -1,0 +1,99 @@
+<!doctype html>
+<head>
+	<script
+		src="https://code.jquery.com/jquery-3.6.0.js"
+		integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+		crossorigin="anonymous"
+	></script>
+
+	<style>
+		@import url("https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300&display=swap");
+
+		:root {
+			--bg-color: 20, 20, 20;
+			--opacity: 1;
+		}
+
+		body {
+			font-family: "Readex Pro", sans-serif;
+			color: white;
+			font-size: 26px;
+			overflow: hidden;
+		}
+
+		#chat-box {
+			position: absolute;
+			height: calc(100vh - 150px);
+			width: 300px;
+			left: calc(100vw - 300px);
+			top: 150px;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			align-items: flex-start;
+			overflow: hidden;
+		}
+
+		.message {
+			background-color: rgba(var(--bg-color), var(--opacity));
+			border-radius: 5px;
+			box-sizing: border-box;
+			margin: 0 2px 5px 2px;
+			position: relative;
+			padding: 10px;
+			font-size: 16px;
+		}
+
+		.message .badge {
+			margin: 0 5px;
+			vertical-align: middle;
+		}
+
+		.message .emoji {
+			vertical-align: middle;
+		}
+	</style>
+
+	<script>
+		var e_chatbox;
+
+		$(document).ready(function () {
+			const client_id = window.crypto.randomUUID();
+			const listEl = document.querySelector("#list");
+
+			e_chatbox = document.querySelector("#chat-box");
+
+			const ES = new EventSource(`/events?client_id=${client_id}`);
+
+			ES.addEventListener("message", function (evt) {
+				console.log(evt);
+				var data = JSON.parse(evt.data);
+				handleChat(data);
+			});
+		});
+
+		function handleChat(event) {
+			var { id, badgeML, textML, userML } = event;
+
+			var msg = document.createElement("div");
+			msg.id = `msg-${id}`;
+			msg.classList.add("message");
+			msg.innerHTML =
+				`<span>${badgeML}</span>` + userML + `: <span>${textML}</span>`;
+			msg.style.top = "100%";
+			e_chatbox.appendChild(msg);
+
+			$(`#msg-${id}`).animate({ top: 0 }, 250, function () {
+				setTimeout(() => {
+					$(`#msg-${id}`).animate({ opacity: 0 }, 500, function () {
+						msg.remove();
+					});
+				}, 4500);
+			});
+		}
+	</script>
+</head>
+
+<body>
+	<div id="chat-box"></div>
+</body>
