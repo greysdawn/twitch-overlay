@@ -21,6 +21,9 @@ Emotes from emote-only messages pop up in a random spot on the screen and shoot 
 ## Chat
 Against the right edge, below the alert box, is a chat window that handles (global) badges, emotes, and, of course, messages. The box is styled similarly to Twitch Studio's built-in chat overlay. Emote-only messages don't appear here, as they're handled above
 
+## Chat-only and alerts-only options
+Just want to have a chatbox, or just want alerts? You can do so! Just set your OBS browser source to your base url with `chat-only` or `alerts-only` on the end, like so: `https://example.com/chat-only`
+
 **More TBA**, we're planning on changing up emotes to have a configurable per-user limit at the very least
 
 # Self Hosting
